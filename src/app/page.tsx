@@ -1,6 +1,16 @@
-import { ArrowRight, MessageCircle, Zap } from "lucide-react";
+"use client";
+
+import { ArrowRight, MessageCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { v4 as uuid } from "uuid";
 
 export default function Home() {
+  const router = useRouter();
+
+  const handleStartFlowing = () => {
+    const chatId = uuid();
+    router.push(`/c/${chatId}`);
+  };
   return (
     <div className="min-h-screen w-full bg-white relative">
       <div
@@ -64,7 +74,10 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button className="bg-black text-white px-8 py-3 rounded-lg text-lg hover:bg-gray-800 transition-colors flex items-center space-x-2">
+            <button
+              onClick={handleStartFlowing}
+              className="bg-black text-white px-8 py-3 rounded-lg text-lg hover:bg-gray-800 transition-colors flex items-center space-x-2"
+            >
               <span>Start Flowing</span>
               <ArrowRight className="w-5 h-5" />
             </button>
