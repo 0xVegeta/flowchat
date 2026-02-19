@@ -4,7 +4,6 @@ import { MessageCircle } from "lucide-react";
 import { useParams } from "next/navigation";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ChatFlowCanvas } from "@/components/ChatFlowCanvas";
-import { FlowSidebar } from "@/components/FlowSidebar";
 
 import {
   SidebarProvider,
@@ -18,9 +17,9 @@ export default function ChatPage() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="h-screen flex flex-col overflow-hidden">
         <header
-          className="flex items-center justify-between px-6 py-4 border-b border-gray-200"
+          className="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0"
           data-component="CHAT_SPACE_HEADER"
         >
           <div className="flex items-center space-x-3">
@@ -34,15 +33,12 @@ export default function ChatPage() {
           </div>
         </header>
 
-      <div className="flex flex-1 overflow-hidden h-full">
-         <FlowSidebar />
-         <main
+        <main
           data-component="CHAT_SPACE_BODY"
-          className="flex-1 relative h-full w-full"
+          className="flex-1 relative w-full min-h-0"
         >
           <ChatFlowCanvas />
         </main>
-      </div>
       </SidebarInset>
     </SidebarProvider>
   );
