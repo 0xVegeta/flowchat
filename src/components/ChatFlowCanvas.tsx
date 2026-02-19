@@ -1,51 +1,77 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import {
   ReactFlow,
-  applyNodeChanges,
-  applyEdgeChanges,
-  addEdge,
   Background,
   BackgroundVariant,
-  type Node,
-  type Edge,
-  type FitViewOptions,
-  type OnConnect,
-  type OnNodesChange,
-  type OnEdgesChange,
-  type OnNodeDrag,
-  type DefaultEdgeOptions,
+  Controls,
+  MiniMap,
+  Panel,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-
-const initialNodes: Node[] = [
-  { id: "n1", position: { x: 0, y: 0 }, data: { label: "Node 1" } },
-  { id: "n2", position: { x: 0, y: 100 }, data: { label: "Node 2" } },
-];
-const initialEdges: Edge[] = [{ id: "n1-n2", source: "n1", target: "n2" }];
+import { useFlowStore } from "@/store/flowStore";
+import { useShallow } from "zustand/react/shallow";
+import { useReactFlow, ReactFlowProvider } from "@xyflow/react";
+import { v4 as uuidv4 } from 'uuid';
 
 export function ChatFlowCanvas() {
-  const [nodes, setNodes] = useState(initialNodes);
-  const [edges, setEdges] = useState(initialEdges);
+  return (
+    <ReactFlowProvider>
+      <ChatFlowCanvasContent />
+    </ReactFlowProvider>
+  );
+}
 
-  const onNodesChange: OnNodesChange = useCallback(
-    (changes) =>
-      setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
-    []
+function ChatFlowCanvasContent() {
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode } = useFlowStore(
+    useShallow((state) => ({
+      nodes: state.nodes,
+      edges: state.edges,
+      onNodesChange: state.onNodesChange,
+      onEdgesChange: state.onEdgesChange,
+      onConnect: state.onConnect,
+      addNode: state.addNode,
+    }))
   );
-  const onEdgesChange: OnEdgesChange = useCallback(
-    (changes) =>
-      setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot)),
-    []
-  );
-  const onConnect: OnConnect = useCallback(
-    (params) => setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot)),
-    []
+  
+  const { screenToFlowPosition } = useReactFlow();
+
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+
+      const type = event.dataTransfer.getData('application/reactflow');
+
+      // check if the dropped element is valid
+      if (typeof type === 'undefined' || !type) {
+        return;
+      }
+
+      const position = screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      const newNode = {
+        id: uuidv4(),
+        type,
+        position,
+        data: { label: `${type} node` },
+      };
+
+      addNode(newNode);
+    },
+    [screenToFlowPosition, addNode],
   );
 
   return (
     <div
       data-component="CHAT_FLOW_CANVAS"
-      style={{ width: "100vw", height: "100vh" }}
+      className="w-full h-full"
     >
       <ReactFlow
         nodes={nodes}
@@ -53,9 +79,18 @@ export function ChatFlowCanvas() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onDrop={onDrop}
+        onDragOver={onDragOver}
         fitView
       >
-        <Background variant={BackgroundVariant.Dots} gap={10} size={1} />
+        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+        <Controls />
+        <MiniMap />
+        <Panel position="top-right">
+             <div className="bg-white p-2 rounded shadow-sm border text-xs text-gray-500">
+                Canvas Ready
+             </div>
+        </Panel>
       </ReactFlow>
     </div>
   );
