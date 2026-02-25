@@ -1,4 +1,8 @@
-import { MessageSquare, Plus, Home, Search, Settings } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { MessageSquare, Plus, Home, Search, Settings, Eye, EyeOff, Check } from "lucide-react";
+import { useSettingsStore, PROVIDERS, type ProviderId } from "@/store/settingsStore";
 
 import {
   Sidebar,
@@ -51,6 +55,19 @@ const navigationItems = [
 ];
 
 export function AppSidebar() {
+  const {
+    activeProvider,
+    activeModel,
+    apiKeys,
+    setActiveProvider,
+    setActiveModel,
+    setApiKey,
+  } = useSettingsStore();
+
+  const [showKey, setShowKey] = useState(false);
+  const currentKey = apiKeys[activeProvider] ?? "";
+  const currentProvider = PROVIDERS.find((p) => p.id === activeProvider);
+
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
@@ -61,6 +78,69 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
+        {/* ─── Provider + Key Config ─────────────────────────── */}
+        <SidebarGroup>
+          <SidebarGroupLabel>LLM Provider</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="px-2 space-y-2">
+              {/* Provider Dropdown */}
+              <select
+                id="provider-select"
+                value={activeProvider}
+                onChange={(e) => setActiveProvider(e.target.value as ProviderId)}
+                className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                {PROVIDERS.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+
+              {/* Model Input */}
+              <input
+                id="model-input"
+                type="text"
+                value={activeModel}
+                onChange={(e) => setActiveModel(e.target.value)}
+                placeholder={currentProvider?.defaultModel ?? "Model ID"}
+                className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+
+              {/* API Key Input */}
+              <div className="relative">
+                <input
+                  id="api-key-input"
+                  type={showKey ? "text" : "password"}
+                  value={currentKey}
+                  onChange={(e) => setApiKey(activeProvider, e.target.value)}
+                  placeholder={`${currentProvider?.label ?? ""} API key`}
+                  className="w-full rounded-md border border-border bg-background px-3 py-1.5 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowKey(!showKey)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showKey ? (
+                    <EyeOff className="w-3.5 h-3.5" />
+                  ) : (
+                    <Eye className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
+
+              {/* Status indicator */}
+              {currentKey && (
+                <div className="flex items-center gap-1.5 text-xs text-emerald-500">
+                  <Check className="w-3 h-3" />
+                  <span>Key saved for {currentProvider?.label}</span>
+                </div>
+              )}
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
